@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SERVICE="${OPENCLAW_GATEWAY_SERVICE:-openclaw-gateway.service}"
+DELAY="${OPENCLAW_RESTART_DELAY:-2s}"
+
+echo "[openclaw-update-shim] Updating OpenClaw without self-restarting the Gateway..."
+openclaw update --no-restart "$@"
+
+unit="openclaw-update-restart-$(date +%s)"
+echo "[openclaw-update-shim] Update completed. Handing restart to systemd user manager as ${unit}..."
+systemd-run --user \
+  --unit="$unit" \
+  --on-active="$DELAY" \
+  /usr/bin/systemctl --user restart "$SERVICE" >/dev/null
+
+echo "[openclaw-update-shim] Restart queued for ${SERVICE} in ${DELAY}."
+echo "[openclaw-update-shim] Success: updater exited cleanly and restart handoff was accepted."
