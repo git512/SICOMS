@@ -248,13 +248,15 @@ When enabled:
 
 The UI/API should treat this as an orchestration policy, not expose backend-specific inference stop/start plumbing to ordinary callers.
 
-## ArcControl / orchestrator relationship
+## LLaMA Proxy / orchestrator relationship
 
-This protocol does not yet mandate which ArcAngle component is the permanent orchestrator implementation.
+Current implementation direction: **LLaMA Proxy is being evolved into the dedicated orchestration service.**
 
-ArcControl is currently the natural authoritative control-plane candidate, but implementation ownership remains an architectural decision and must be verified against current runtime design before code is changed.
+This is intentional because LLaMA Proxy already sits on the ingress path for ordinary inference calls, including calls from "dumb" clients that are unaware of GPU leasing or orchestration. That allows the orchestrator to enforce lease/admission policy centrally: orchestration-aware clients can request explicit leases, while unaware clients can simply be held, queued, delayed, or routed until inference is legally available again.
 
-The protocol should therefore be implemented behind a stable lease interface so clients such as ArcMusic do not depend on ArcControl internals.
+ArcControl remains a natural telemetry/control-plane subscriber and operator surface, but GPU lease authority should not be duplicated there. ArcMusic and other clients should depend on the stable lease protocol rather than LLaMA Proxy internals.
+
+The orchestrator implementation must still preserve transport independence at the client contract boundary so the pub/sub/event transport can evolve without forcing every client to change.
 
 ## Cross-project usefulness
 
