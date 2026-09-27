@@ -410,3 +410,18 @@ The intended system is not "an always-mutating fork."
 It is a continuously reconciled, test-gated downstream distribution whose divergence from upstream remains small, explicit, attributable, reversible, and mechanically defended by regression tests.
 
 A fresh agent should be able to enter from this document plus project-local state, distinguish fact from proposal, inspect current reality, and continue safely without pretending to remember conversations it never saw.
+
+
+## GPU lease pub/sub orchestration protocol
+
+A cross-project GPU lease and event-publication abstraction is now documented at:
+
+- `protocols/GPU_LEASE_PUBSUB.md`
+
+This protocol is intended to support both inter-project and intra-project coordination for ArcMusic, interactive inference, openclaw, ComfyUI, ArcBench, voice workloads, and future GPU consumers.
+
+The central semantic requirement is that GPU ownership be a time-bounded, observable transaction rather than a simple busy/free flag. A lease may communicate notice time, `acquire_after`, maximum continuous duration, expiry, renewal timing, preemption policy, and a subscribable event topic/stream. This allows agent frameworks and inference services to react mechanically to handoff notices and later restoration events without requiring a language model to remain resident during the transition.
+
+ArcMusic is expected to expose an **orchestrator request** setting. When enabled, GPU-exclusive stages request a lease through this abstraction before taking GPU ownership.
+
+The protocol intentionally does not yet fix the transport/broker or permanently assign implementation ownership to ArcControl versus a dedicated orchestration/residency service. Those remain empirical architectural decisions.
